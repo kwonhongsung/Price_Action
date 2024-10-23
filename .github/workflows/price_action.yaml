@@ -31,7 +31,7 @@ jobs:
       run: |
         git config --global user.name "danuni29"
         git config --global user.email "hekdms@jbnu.ac.kr"
-        if [ "$(git status --porcelain ./Price_Action/*.csv)" ]; then
+        if [ "$(git status --porcelain price_data.csv)" ]; then
           git commit -m "Update Price Data - $(TZ='Asia/Seoul' date +'%Y-%m-%d')"
           git push https://danuni29:${{ secrets.MY_GITHUB_TOKEN }}@github.com/danuni29/Price_Action.git
         else
