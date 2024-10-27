@@ -17,9 +17,9 @@ def detect_encoding(file_path):
 
 def main():
 
-    info_data = pd.read_csv('price_regions.csv', encoding=detect_encoding('price_regions.csv'))
+    # info_data = pd.read_csv('price_regions.csv', encoding=detect_encoding('price_regions.csv'))
     # product_data = pd.read_csv('product_code.csv', encoding=detect_encoding('product_code.csv'), header=1)
-    print(info_data.columns)
+    # print(info_data.columns)
 
     # KAMIS API 기본 URL
     # api_url = "http://www.kamis.or.kr/service/price/xml.do?action=periodProductList"
