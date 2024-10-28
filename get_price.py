@@ -28,7 +28,7 @@ def main():
 
     desired_timezone = pytz.timezone('Asia/Seoul')
     today = datetime.now(desired_timezone)
-    today = today - timedelta(days=1)
+    today = today - timedelta(days=2)
 
     print(today.strftime('%Y-%m-%d'))
 
@@ -53,17 +53,35 @@ def main():
         # print(response.url)
         print(f"Error: {response.status_code}")
 
-    try:
-        js = json.loads(response.content)
-        each_data = pd.DataFrame(js['data']['item'])
-        each_data['date'] = today
-        # return each_data
-        print(each_data)
-        each_data.to_csv('price_data.csv', mode='a', index=False, encoding='utf-8-sig')
+    full_path = 'price_data.csv'
+    # try:
+    js = json.loads(response.content)
+    each_data = pd.DataFrame(js['data']['item'])
+    each_data['date'] = today
+    # return each_data
+    print(each_data)
+    # each_data.to_csv('price_data.csv', mode='a', index=False, encoding='utf-8-sig')
 
-    except:
-        pass
+    for item_name, group in each_data.groupby('item_name'):
+        file_name = f'price_{item_name}.csv'
+        file_path = os.path.join('./output', file_name)
 
+        # 파일이 존재하면 전체 경로(file_path)를 확인하여 기존 데이터 불러오기
+        if os.path.exists(file_path):
+            existing_df = pd.read_csv(file_path, encoding=detect_encoding(file_path))
+
+            # 기존 데이터와 새로운 데이터 결합
+            combined_df = pd.concat([existing_df, group], ignore_index=True)
+
+            # 중복된 행 제거 (date 기준으로 중복 제거)
+            combined_df = combined_df.drop_duplicates(subset=['date'], keep='first')
+            print(f'중복 행 제거 후 데이터 결합 완료: {file_path}')
+        else:
+            combined_df = group
+
+        # 결합된 데이터 저장
+        combined_df.to_csv(file_path, index=False, encoding='utf-8-sig')
+        print(f"Data saved to {file_path}")
 
 if __name__ == '__main__':
     main()
