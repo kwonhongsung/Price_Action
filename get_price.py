@@ -28,7 +28,7 @@ def main():
 
     desired_timezone = pytz.timezone('Asia/Seoul')
     today = datetime.now(desired_timezone)
-    today = today - timedelta(days=2)
+    today = today - timedelta(days=1)
 
     print(today.strftime('%Y-%m-%d'))
 
