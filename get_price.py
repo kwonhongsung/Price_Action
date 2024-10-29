@@ -37,6 +37,7 @@ def main():
         quote_plus("p_returntype"): "json",
         quote_plus("p_product_cls_code"): "01",
         quote_plus("p_item_category_code"): '200',
+        quote_plus("p_country_code"): '3511',
         quote_plus("p_regday"): today.strftime('%Y-%m-%d'),
         quote_plus("p_convert_kg_yn"): 'N',
     })
