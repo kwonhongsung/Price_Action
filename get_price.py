@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import os
 import pytz
 import json
+from tqdm import tqdm
 
 def detect_encoding(file_path):
     with open(file_path, 'rb') as f:
@@ -17,72 +18,99 @@ def detect_encoding(file_path):
 
 def main():
 
-    # info_data = pd.read_csv('price_regions.csv', encoding=detect_encoding('price_regions.csv'))
+    # info_data = pd.read_csv('regions_price_selection.csv', encoding=detect_encoding('regions_price_selection.csv'))
+
     # product_data = pd.read_csv('product_code.csv', encoding=detect_encoding('product_code.csv'), header=1)
+
     # print(info_data.columns)
 
     # KAMIS API 기본 URL
     # api_url = "http://www.kamis.or.kr/service/price/xml.do?action=periodProductList"
     api_url = "http://www.kamis.or.kr/service/price/xml.do?action=dailyPriceByCategoryList"
 
+    info_data = { '1101': '서울', '2100': '부산', '3511':'전주'}
 
     desired_timezone = pytz.timezone('Asia/Seoul')
     today = datetime.now(desired_timezone)
-    today = today - timedelta(days=1)
+
 
     print(today.strftime('%Y-%m-%d'))
+    cert_key = '50c892c3-9a7b-4c46-81e1-c9cc776f476c&'
 
-    params = f'&{quote_plus("p_cert_key")}=50c892c3-9a7b-4c46-81e1-c9cc776f476c&' + urlencode({
-        quote_plus("p_cert_id"): "3749",
-        quote_plus("p_returntype"): "json",
-        quote_plus("p_product_cls_code"): "01",
-        quote_plus("p_item_category_code"): '200',
-        quote_plus("p_country_code"): '3511',
-        quote_plus("p_regday"): today.strftime('%Y-%m-%d'),
-        quote_plus("p_convert_kg_yn"): 'N',
-    })
+    # start_date = datetime(2024, 1, 1)
+    # end_date = datetime.today()
+    # date_range = pd.date_range(start=start_date, end=end_date)
 
+    # 각 지역에 대해 API 호출 파라미터를 설정하고 저장
+    for region_code, region_name in tqdm(info_data.items()):
+        # region_code = row["code"]
+        # region_name = row["region"]
 
-    # API 요청
-    response = requests.get(api_url, params=params)
+        # 지역별 output 폴더 경로 설정
+        output_folder = f'./output/{region_name}'
+        os.makedirs(output_folder, exist_ok=True)  # 폴더가 없으면 생성
 
-    # 응답 상태 코드 확인
-    if response.status_code == 200:
-        # 응답 데이터를 텍스트로 출력 (원본 XML 데이터 확인)
-        print(response.text)
-    else:
-        # print(response.url)
-        print(f"Error: {response.status_code}")
+        # 각 날짜에 대해 데이터를 가져옴
+        # for date in tqdm(date_range, desc=f"Processing {region_name} ({region_code})"):
+        #     formatted_date = date.strftime('%Y-%m-%d')
+        #     print(formatted_date)
 
-    full_path = 'price_data.csv'
-    # try:
-    js = json.loads(response.content)
-    each_data = pd.DataFrame(js['data']['item'])
-    each_data['date'] = today
-    # return each_data
-    print(each_data)
-    # each_data.to_csv('price_data.csv', mode='a', index=False, encoding='utf-8-sig')
+            # 파라미터 설정
+        params = {
+            quote_plus("p_cert_key"): cert_key,
+            quote_plus("p_cert_id"): "3749",
+            quote_plus("p_returntype"): "json",
+            quote_plus("p_product_cls_code"): "01",
+            quote_plus("p_item_category_code"): "200",
+            quote_plus("p_country_code"): str(region_code),
+            quote_plus("p_regday"): today,
+            quote_plus("p_convert_kg_yn"): 'N'
+        }
 
-    for item_name, group in each_data.groupby('item_name'):
-        file_name = f'price_{item_name}.csv'
-        file_path = os.path.join('./output', file_name)
+        # API 요청
+        response = requests.get(api_url, params=params)
 
-        # 파일이 존재하면 전체 경로(file_path)를 확인하여 기존 데이터 불러오기
-        if os.path.exists(file_path):
-            existing_df = pd.read_csv(file_path, encoding=detect_encoding(file_path))
+        # 응답 상태 코드 확인
+        if response.status_code == 200:
+            try:
+                # JSON 데이터를 파싱하고 데이터 구조 확인
+                js = json.loads(response.content)
+                print(js)
 
-            # 기존 데이터와 새로운 데이터 결합
-            combined_df = pd.concat([existing_df, group], ignore_index=True)
+                # 'data'와 'item' 키 존재 여부를 검사하고 데이터프레임 생성
+                if 'data' in js and isinstance(js['data'], dict) and 'item' in js['data']:
+                    each_data = pd.DataFrame(js['data']['item'])
 
-            # 중복된 행 제거 (date 기준으로 중복 제거)
-            combined_df = combined_df.drop_duplicates(subset=['date'], keep='first')
-            print(f'중복 행 제거 후 데이터 결합 완료: {file_path}')
+                else:
+                    # print(f"Unexpected data format for {region_name} ({region_code}) on {formatted_date}: Skipping")
+                    continue
+
+                each_data['date'] = today
+                each_data['region'] = region_name  # 지역명 추가
+
+                # item_name별로 분리하여 저장
+                for item_name, group in each_data.groupby('item_name'):
+                    file_name = f'price_{item_name}.csv'
+                    file_path = os.path.join(output_folder, file_name)
+
+                    # 파일이 존재하면 기존 데이터에 추가
+                    if os.path.exists(file_path):
+                        existing_df = pd.read_csv(file_path, encoding='utf-8-sig')
+                        combined_df = pd.concat([existing_df, group], ignore_index=True)
+                        print(combined_df)
+                        combined_df = combined_df.drop_duplicates(subset=['date', 'region'], keep='first')
+                    else:
+                        combined_df = group
+
+                    # 결합된 데이터 저장
+                    combined_df.to_csv(file_path, index=False, encoding='utf-8-sig')
+                    print("저장완료")
+
+            except json.JSONDecodeError as e:
+                pass
+                # print(f"JSON decoding error for {region_name} ({region_code}) on {formatted_date}: {e}")
         else:
-            combined_df = group
-
-        # 결합된 데이터 저장
-        combined_df.to_csv(file_path, index=False, encoding='utf-8-sig')
-        print(f"Data saved to {file_path}")
-
+            pass
+            # print(f"Error fetching data for {region_name} ({region_code}) on {formatted_date}: {response.status_code}")
 if __name__ == '__main__':
     main()
