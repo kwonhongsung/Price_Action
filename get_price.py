@@ -31,10 +31,10 @@ def main():
     info_data = { '1101': '서울', '2100': '부산', '3511':'전주'}
 
     desired_timezone = pytz.timezone('Asia/Seoul')
-    today = datetime.now(desired_timezone)
+    day = datetime.now(desired_timezone)
+    today = day.strftime('%Y-%m-%d')
 
-
-    print(today.strftime('%Y-%m-%d'))
+    # print(today.strftime('%Y-%m-%d'))
     cert_key = '50c892c3-9a7b-4c46-81e1-c9cc776f476c&'
 
     # start_date = datetime(2024, 1, 1)
