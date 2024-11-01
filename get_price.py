@@ -7,6 +7,7 @@ import os
 import pytz
 import json
 from tqdm import tqdm
+import numpy as np
 
 def detect_encoding(file_path):
     with open(file_path, 'rb') as f:
@@ -82,6 +83,10 @@ def main():
                 # 'data'와 'item' 키 존재 여부를 검사하고 데이터프레임 생성
                 if 'data' in js and isinstance(js['data'], dict) and 'item' in js['data']:
                     each_data = pd.DataFrame(js['data']['item'])
+                    each_data['date'] = today
+                    # print(f"{each_data}=each_data")
+                    each_data.to_csv(f"{output_folder}/total.csv", mode='w', index=False)
+                    print('저장완료')
 
                 else:
                     print(f"Unexpected data format for {region_name} ({region_code}) on : Skipping")
@@ -114,5 +119,23 @@ def main():
         else:
             # pass
             print(f"Error fetching data for {region_name} ({region_code}) on : {response.status_code}")
+
+        data = pd.read_csv(f'./output/{region_name}/total.csv')
+
+        # dpr1, dpr3, dpr4 열에서 값이 '-'인 경우 NaN으로 변환하여 계산 가능하도록 함
+        for col in ['dpr1', 'dpr3', 'dpr4', 'dpr5', 'dpr6']:
+            data[col] = data[col].replace('-', np.nan)  # '-'를 NaN으로 대체
+            data[col] = data[col].str.replace(',', '').astype(float)  # 쉼표 제거 후 float 변환
+            # data[col] = data[col].astype(str).str.replace(',', '').astype(float)
+
+            # dpr3_rate와 dpr4_rate 계산 (기준은 dpr1)
+        for i in range(3, 7):
+            rate_column = f'dpr{i}_rate'  # 새로운 rate 칼럼 이름 생성
+            data[rate_column] = ((data['dpr1'] - data[f'dpr{i}']) / data['dpr1']) * 100
+
+        data.to_csv(f'./output/{region_name}/total.csv')
+
+        # 증가율과 감소율 데이터 프레임 분리
+
 if __name__ == '__main__':
     main()
