@@ -35,14 +35,14 @@ def main():
     today = day.strftime('%Y-%m-%d')
 
     # print(today.strftime('%Y-%m-%d'))
-    cert_key = '50c892c3-9a7b-4c46-81e1-c9cc776f476c&'
+    # cert_key = '50c892c3-9a7b-4c46-81e1-c9cc776f476c&'
 
     # start_date = datetime(2024, 1, 1)
     # end_date = datetime.today()
     # date_range = pd.date_range(start=start_date, end=end_date)
 
     # 각 지역에 대해 API 호출 파라미터를 설정하고 저장
-    for region_code, region_name in tqdm(info_data.items()):
+    for region_code, region_name in info_data.items():
         # region_code = row["code"]
         # region_name = row["region"]
 
@@ -56,16 +56,18 @@ def main():
         #     print(formatted_date)
 
             # 파라미터 설정
-        params = {
-            quote_plus("p_cert_key"): cert_key,
-            quote_plus("p_cert_id"): "3749",
+        print(str(region_code))
+
+
+        params = f'&{quote_plus("p_cert_key")}=50c892c3-9a7b-4c46-81e1-c9cc776f476c&' + urlencode({
+            quote_plus("p_cert_id"): "2100",
             quote_plus("p_returntype"): "json",
             quote_plus("p_product_cls_code"): "01",
-            quote_plus("p_item_category_code"): "200",
+            quote_plus("p_item_category_code"): '200',
             quote_plus("p_country_code"): str(region_code),
             quote_plus("p_regday"): today,
-            quote_plus("p_convert_kg_yn"): 'N'
-        }
+            quote_plus("p_convert_kg_yn"): 'N',
+        })
 
         # API 요청
         response = requests.get(api_url, params=params)
@@ -82,8 +84,8 @@ def main():
                     each_data = pd.DataFrame(js['data']['item'])
 
                 else:
-                    # print(f"Unexpected data format for {region_name} ({region_code}) on {formatted_date}: Skipping")
-                    continue
+                    print(f"Unexpected data format for {region_name} ({region_code}) on : Skipping")
+
 
                 each_data['date'] = today
                 each_data['region'] = region_name  # 지역명 추가
@@ -108,9 +110,9 @@ def main():
 
             except json.JSONDecodeError as e:
                 pass
-                # print(f"JSON decoding error for {region_name} ({region_code}) on {formatted_date}: {e}")
+                print(f"JSON decoding error for {region_name} ({region_code}) on : {e}")
         else:
-            pass
-            # print(f"Error fetching data for {region_name} ({region_code}) on {formatted_date}: {response.status_code}")
+            # pass
+            print(f"Error fetching data for {region_name} ({region_code}) on : {response.status_code}")
 if __name__ == '__main__':
     main()
