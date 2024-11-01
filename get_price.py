@@ -1,13 +1,15 @@
 import requests
-import pandas as pd
 import chardet
 from urllib.parse import quote_plus, urlencode
 from datetime import datetime, timedelta
 import os
 import pytz
 import json
-from tqdm import tqdm
 import numpy as np
+from twilio.rest import Client
+import pandas as pd
+from dashboard import download_csv_from_github, nice_encoding
+import io
 
 def detect_encoding(file_path):
     with open(file_path, 'rb') as f:
@@ -35,12 +37,6 @@ def main():
     day = datetime.now(desired_timezone)
     today = day.strftime('%Y-%m-%d')
 
-    # print(today.strftime('%Y-%m-%d'))
-    # cert_key = '50c892c3-9a7b-4c46-81e1-c9cc776f476c&'
-
-    # start_date = datetime(2024, 1, 1)
-    # end_date = datetime.today()
-    # date_range = pd.date_range(start=start_date, end=end_date)
 
     # 각 지역에 대해 API 호출 파라미터를 설정하고 저장
     for region_code, region_name in info_data.items():
@@ -78,7 +74,7 @@ def main():
             try:
                 # JSON 데이터를 파싱하고 데이터 구조 확인
                 js = json.loads(response.content)
-                print(js)
+                # print(js)
 
                 # 'data'와 'item' 키 존재 여부를 검사하고 데이터프레임 생성
                 if 'data' in js and isinstance(js['data'], dict) and 'item' in js['data']:
@@ -86,7 +82,7 @@ def main():
                     each_data['date'] = today
                     # print(f"{each_data}=each_data")
                     each_data.to_csv(f"{output_folder}/total.csv", mode='w', index=False)
-                    print('저장완료')
+                    # print('저장완료')
 
                 else:
                     print(f"Unexpected data format for {region_name} ({region_code}) on : Skipping")
@@ -125,8 +121,7 @@ def main():
         # dpr1, dpr3, dpr4 열에서 값이 '-'인 경우 NaN으로 변환하여 계산 가능하도록 함
         for col in ['dpr1', 'dpr3', 'dpr4', 'dpr5', 'dpr6']:
             data[col] = data[col].replace('-', np.nan)  # '-'를 NaN으로 대체
-            data[col] = data[col].str.replace(',', '').astype(float)  # 쉼표 제거 후 float 변환
-            # data[col] = data[col].astype(str).str.replace(',', '').astype(float)
+            data[col] = data[col].astype(str).str.replace(',', '').astype(float)
 
             # dpr3_rate와 dpr4_rate 계산 (기준은 dpr1)
         for i in range(3, 7):
@@ -134,8 +129,43 @@ def main():
             data[rate_column] = ((data['dpr1'] - data[f'dpr{i}']) / data['dpr1']) * 100
 
         data.to_csv(f'./output/{region_name}/total.csv')
+    # -----------------------------------------------------------
+    # 문자 보내기
+    account_sid = 'AC6e9b818ca2ffc02dc8f85b51c6447041'
+    auth_token = 'b3e9fe52e754160431cd20b63ca9c134'
+    client = Client(account_sid, auth_token)
 
-        # 증가율과 감소율 데이터 프레임 분리
+    # UTF-8 인코딩 설정
+    # sys.stdout.reconfigure(encoding='utf-8')
+
+    # CSV 파일 URL
+    url = 'https://raw.githubusercontent.com/danuni29/Price_Action/refs/heads/master/output/전주/total.csv'
+
+    # CSV 파일 읽기
+    # data = pd.read_csv(url)
+
+    data = download_csv_from_github(url)
+    # print(data)
+    encod = nice_encoding(data)
+    csv_data = io.BytesIO(data)
+    data = pd.read_csv(csv_data, encoding=encod)
+    print(data)
+
+    # 최신 데이터에서 dpr1 값 추출
+
+    tomato_data = data[data['kind_name'] == '대추방울토마토(1kg)']
+    print(tomato_data)
+
+    # Twilio를 통해 메시지 전송
+
+    message_body = f"[토마토] 오늘 : {tomato_data['dpr1'].values[0]}원 , 저번주에 비해 {round(tomato_data['dpr3_rate'].values[0], 1)} 변화"
+    message = client.messages.create(
+        to="+821075503967",
+        from_="+18302680093",
+        body=message_body
+    )
+    print(message.sid)
+
 
 if __name__ == '__main__':
     main()

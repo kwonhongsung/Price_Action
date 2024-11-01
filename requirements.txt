@@ -1,5 +1,6 @@
 requests
-pandas
 chardet
 pytz
-tqdm
+twilio
+pandas
+numpy

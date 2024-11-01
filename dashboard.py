@@ -11,8 +11,9 @@ import requests
 import chardet
 from flask import Flask, request, send_file
 import io
+# import io
 
-def detect_encoding(file_content):
+def nice_encoding(file_content):
     result = chardet.detect(file_content)
     return result['encoding']
 def download_csv_from_github(file_url):
@@ -44,9 +45,9 @@ def main():
     url = f'https://raw.githubusercontent.com/danuni29/Price_Action/refs/heads/master/output/{region}/total.csv'
     data = download_csv_from_github(url)
     # print(data)
-    encoding = detect_encoding(data)
+    encod = nice_encoding(data)
     csv_data = io.BytesIO(data)
-    data = pd.read_csv(csv_data, encoding=encoding)
+    data = pd.read_csv(csv_data, encoding=encod)
 
     # 비교 기간 옵션
     comparison_options = {
@@ -146,7 +147,7 @@ def main():
     # data = pd.read_csv(f'./output/{region}/price_{crop}.csv')
     file_data = download_csv_from_github(url)
     # print(data)
-    encoding = detect_encoding(file_data)
+    encoding = nice_encoding(file_data)
     csv_data = io.BytesIO(file_data)
     data = pd.read_csv(csv_data, encoding=encoding)
     # print(data)
@@ -193,15 +194,7 @@ def main():
         st.write("### Daily Prices by Date (2024)")
         st.plotly_chart(fig)
 
-    if st.button("가격 히트맵 보기"):
-        # 날짜 데이터를 연, 월, 일로 분리
-        data['year'] = data['date'].dt.year
-        data['month'] = data['date'].dt.month
-        data['day'] = data['date'].dt.day
 
-        # 히트맵 그리기
-        st.write("### Daily Prices by Date (2024)")
-        st.plotly_chart(fig)
 
 
 if __name__ == '__main__':
