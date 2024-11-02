@@ -4,3 +4,5 @@ pytz
 twilio
 pandas
 numpy
+matplotlib
+seaborn
