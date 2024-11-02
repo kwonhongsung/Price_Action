@@ -6,3 +6,7 @@ pandas
 numpy
 matplotlib
 seaborn
+plotly
+twilio
+flask
+plotly_calplot
