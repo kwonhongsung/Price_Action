@@ -6,7 +6,6 @@ pandas
 numpy
 matplotlib
 seaborn
-plotly
 twilio
 flask
 
