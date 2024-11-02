@@ -6,11 +6,8 @@ altair
 async-timeout
 attrs
 blinker
-Brotli @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_27zk0eqdh0/croot/brotli-split_1714483157007/work
 cachetools
-certifi @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_0ecs_ou28u/croot/certifi_1725551740278/work/certifi
-chardet @ file:///Users/ktietz/demo/mc3/conda-bld/chardet_1628859434282/work
-charset-normalizer @ file:///croot/charset-normalizer_1721748349566/work
+
 click
 contourpy
 cycler
@@ -19,7 +16,6 @@ fonttools
 frozenlist
 gitdb
 GitPython
-idna @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_a12xpo84t2/croot/idna_1714398852854/work
 importlib_metadata
 importlib_resources
 itsdangerous
@@ -33,7 +29,6 @@ matplotlib
 mdurl
 multidict
 narwhals
-numpy @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_f9f5xs2fx0/croot/numpy_and_numpy_base_1682520577456/work
 packaging
 pandas
 pillow
@@ -47,11 +42,9 @@ pydeck
 Pygments
 PyJWT
 pyparsing
-PySocks @ file:///Users/ktietz/Code/oss/ci_pkgs/pysocks_1626781349491/work
 python-dateutil
 pytz
 referencing
-requests @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_70sm12ba9w/croot/requests_1721414707360/work
 rich
 rpds-py
 seaborn
@@ -63,8 +56,7 @@ toml
 tornado
 twilio
 typing_extensions=
-tzdata=
-urllib3 @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_06_m8gdsy6/croot/urllib3_1727769822458/work
+tzdata
 Werkzeug
 yarl
 zipp
