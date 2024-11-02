@@ -8,5 +8,4 @@ matplotlib
 seaborn
 twilio
 flask
-
 plotly_calplot
