@@ -55,7 +55,7 @@ tenacity
 toml
 tornado
 twilio
-typing_extensions=
+typing_extensions
 tzdata
 Werkzeug
 yarl
